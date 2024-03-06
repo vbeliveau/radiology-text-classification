@@ -1,0 +1,8 @@
+{
+"body_learning_rate_min": 5e-7,
+"body_learning_rate_max": 5e-6,
+"body_learning_rate_log": true,
+"batch_size_min": 96,
+"batch_size_max": 144,
+"project_name": "FCD_vs_rest"
+}

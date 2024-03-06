@@ -1,0 +1,5 @@
+{
+"model_name": "DDSC/roberta-base-danish",
+"datasets": "radiology_reports",
+"training_configs": "config/transformers_finetuning/roberta-base-danish_dataset-radiology-reports_training-parameters.json"
+}

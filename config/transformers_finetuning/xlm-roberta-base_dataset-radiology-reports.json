@@ -1,0 +1,5 @@
+{
+"model_name": "xlm-roberta-base",
+"datasets": "radiology_reports",
+"training_configs": "config/transformers_finetuning/xlm-roberta-base_dataset-radiology-reports_training-parameters.json"
+}
