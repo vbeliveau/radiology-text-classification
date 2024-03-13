@@ -15,6 +15,7 @@ import transformers
 
 from datasets import Dataset
 from pathlib import Path
+from peft import PeftModel
 from sklearn.metrics import (
     balanced_accuracy_score,
     ConfusionMatrixDisplay,
@@ -86,11 +87,16 @@ if __name__ == "__main__":
         "pt", columns=["input_ids", "attention_mask"], output_all_columns=True)
     eval_dataloader = DataLoader(
         eval_tokenized_ds, collate_fn=data_collator, batch_size=128)
-    # eval_dataloader = DataLoader(
-    #     eval_tokenized_ds, batch_size=128)
 
     # Load model
-    model = AutoModelForSequenceClassification.from_pretrained(model_id)
+    if configs.get("peft", False):
+        print(configs.get("base_model"))
+        print(model_id)
+        model = AutoModelForSequenceClassification.from_pretrained(
+            configs.get("base_model"), num_labels=n_classes)
+        model = PeftModel.from_pretrained(model, model_id)
+    else:
+        model = AutoModelForSequenceClassification.from_pretrained(model_id)
 
     # Compute predictions
     model.eval()

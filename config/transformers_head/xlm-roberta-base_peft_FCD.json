@@ -1,11 +1,12 @@
 {
 "project_name": "FCD",
 "base_model": "xlm-roberta-base",
-"training_configs": "config/transformers_head/xlm-roberta-base_FCD_training-parameters.json",
+"training_configs": "config/transformers_head/xlm-roberta-base_peft_FCD_training-parameters.json",
 "learning_rate_min": 1e-6,
 "learning_rate_max": 1e-4,
 "learning_rate_log": true,
 "weight_decay_min": 1e-4,
 "weight_decay_max": 1e-2,
-"weight_decay_log": true
+"weight_decay_log": true,
+"peft": true
 }

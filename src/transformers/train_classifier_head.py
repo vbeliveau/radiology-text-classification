@@ -12,6 +12,7 @@ import json
 import os
 
 from pathlib import Path
+from peft import get_peft_model, LoraConfig, TaskType
 from transformers import (
     AutoModelForSequenceClassification,
     DataCollatorWithPadding,
@@ -45,7 +46,6 @@ if __name__ == "__main__":
     project_name = configs["project_name"]
     base_model = configs["base_model"]
     model_id = configs.get("finetuned_model_path", base_model)
-    peft = configs.get("peft", False)
 
     # Assign paths
     os.chdir(root_dir)
@@ -79,6 +79,18 @@ if __name__ == "__main__":
 
     model = AutoModelForSequenceClassification.from_pretrained(
         model_id, num_labels=n_classes)
+
+    if configs.get("peft", False):
+        print("Running using PEFT")
+        peft_config = LoraConfig(
+            task_type=TaskType.SEQ_CLS,
+            r=configs.get("peft_r", 2),
+            lora_alpha=configs.get("peft_lora_alpha", 16),
+            lora_dropout=configs.get("peft_lora_dropout", 0.1),
+            bias=configs.get("peft_bias", "none"),
+        )
+        model = get_peft_model(model, peft_config)
+        model.print_trainable_parameters()
 
     trainer = WeightedCELossTrainer(
         args=training_args,

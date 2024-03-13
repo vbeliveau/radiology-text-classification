@@ -53,7 +53,6 @@ if __name__ == "__main__":
     project_name = configs["project_name"]
     base_model = configs["base_model"]
     model_id = configs.get("finetuned_model_path", base_model)
-    peft = configs.get("peft", False)
 
     # Assign paths
     os.chdir(root_dir)
@@ -119,6 +118,7 @@ if __name__ == "__main__":
             model_id, num_labels=n_classes)
 
         if configs.get("peft", False):
+            print("Running using PEFT")
             peft_config = LoraConfig(
                 task_type=TaskType.SEQ_CLS,
                 r=configs.get("peft_r", 2),
