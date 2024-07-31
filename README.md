@@ -1,1 +1,2 @@
-# Classification of radiology reports in BrainDrugs WP5
+# Classification of Medical Text in Small and Imbalanced
+Datasets in a Non-English Language
