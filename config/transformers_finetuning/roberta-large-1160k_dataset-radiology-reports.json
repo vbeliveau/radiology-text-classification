@@ -1,5 +1,0 @@
-{
-"model_name": "AI-Sweden-Models/roberta-large-1160k",
-"datasets": "radiology_reports",
-"training_configs": "config/transformers_finetuning/roberta-large-1160k_dataset-radiology-reports_training-parameters.json"
-}

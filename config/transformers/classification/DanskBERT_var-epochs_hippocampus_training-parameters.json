@@ -1,0 +1,13 @@
+{
+"eval_steps": 1,
+"evaluation_strategy": "epoch",
+"logging_steps": 10,
+"logging_strategy": "steps",
+"output_dir": "/nlp/models/transformers_head/DanskBERT_var-epochs_hippocampus",
+"per_device_train_batch_size": 16,
+"per_device_eval_batch_size": 16,
+"push_to_hub": false,
+"report_to": "tensorboard",
+"save_strategy": "no",
+"warmup_ratio": 0.1
+}

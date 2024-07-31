@@ -1,0 +1,12 @@
+{
+"project_name": "MTS",
+"base_model": "DDSC/roberta-base-danish",
+"finetuned_model_path": "/nlp/models/transformers_finetuning/roberta-base-danish_dataset-radiology-reports_n-epochs-10",
+"training_configs": "config/transformers_head/roberta-base-danish-finetuned_MTS_training-parameters.json",
+"learning_rate_min": 1e-6,
+"learning_rate_max": 1e-4,
+"learning_rate_log": true,
+"weight_decay_min": 1e-4,
+"weight_decay_max": 1e-2,
+"weight_decay_log": true
+}

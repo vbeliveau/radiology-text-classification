@@ -1,0 +1,5 @@
+{
+"model_name": "vesteinn/DanskBERT",
+"datasets": "radiology_reports",
+"training_configs": "config/transformers_finetuning/DanskBERT_dataset-radiology-reports_training-parameters.json"
+}
