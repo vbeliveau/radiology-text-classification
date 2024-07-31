@@ -1,8 +1,8 @@
 {
 "project_name": "FCD",
 "base_model": "xlm-roberta-base",
-"finetuned_model_path": "/nlp/models/transformers_finetuning/xlm-roberta-base_dataset-radiology-reports_n-epochs-10",
-"training_configs": "config/transformers_head/xlm-roberta-base-finetuned_FCD_training-parameters.json",
+"finetuned_model_path": "/nlp/models/transformers/pretrained/xlm-roberta-base_dataset-radiology-reports_n-epochs-10",
+"training_configs": "config/transformers/classification/xlm-roberta-base-pretrained_FCD_training-parameters.json",
 "learning_rate_min": 1e-6,
 "learning_rate_max": 1e-4,
 "learning_rate_log": true,

@@ -1,8 +1,8 @@
 {
 "project_name": "FCD",
 "base_model": "DDSC/roberta-base-danish",
-"finetuned_model_path": "/nlp/models/transformers_finetuning/roberta-base-danish_dataset-radiology-reports_n-epochs-10",
-"training_configs": "config/transformers_head/roberta-base-danish-finetuned_FCD_training-parameters.json",
+"finetuned_model_path": "/nlp/models/transformers/pretrained/roberta-base-danish_dataset-radiology-reports_n-epochs-10",
+"training_configs": "config/transformers/classification/roberta-base-danish-pretrained_FCD_training-parameters.json",
 "learning_rate_min": 1e-6,
 "learning_rate_max": 1e-4,
 "learning_rate_log": true,

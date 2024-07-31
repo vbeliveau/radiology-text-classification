@@ -1,7 +1,7 @@
 {
 "project_name": "hippocampus",
 "base_model": "vesteinn/DanskBERT",
-"training_configs": "config/transformers_head/DanskBERT_hippocampus_training-parameters.json",
+"training_configs": "config/transformers/classification/DanskBERT_hippocampus_training-parameters.json",
 "learning_rate_min": 1e-5,
 "learning_rate_max": 1e-3,
 "learning_rate_log": true,
