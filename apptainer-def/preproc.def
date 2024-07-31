@@ -2,7 +2,9 @@ Bootstrap: docker
 From: debian:bookworm-slim
 
 %files
-    requirements.txt
+    /proc_data1/bd5/anonymize_danish_text /opt
+    /proc_data1/bd5/gpg_utils /opt
+    /proc_data1/bd5/text_utils /opt
 
 %post
 
@@ -11,7 +13,10 @@ From: debian:bookworm-slim
     apt-get update -q && \
     apt-get install -q -y --no-install-recommends \
         ca-certificates \
-        git \
+        gpg \
+        gpg-agent \
+        pinentry-tty \
+        tar \
         wget &&
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -36,20 +41,21 @@ From: debian:bookworm-slim
     python3 -m venv /venv
     . /venv/bin/activate
     pip install \
-        accelerate==0.30.0 \
-        datasets==2.19.0 \
-        matplotlib==3.8.4 \
-        nltk==3.8.1 \
-        optuna==3.6.1 \
-        setfit==1.0.3 \
-        optuna-dashboard==0.15.1 \
-        sentence-transformers==2.7.0 \
-        torch==2.3.0 \
-        tensorboard==2.16.2 \
-        transformers==4.40.1
-        
-    python -c "import nltk; nltk.download('punkt')"
+        cupy-cuda12x==12.3.0 \
+        dacy==2.7.7 \
+        pandas==2.2.1 \
+        spacy[transformers]==3.5.2 \
+        tqdm==4.66.2
+    python -c "import dacy; dacy.load('da_dacy_large_trf-0.2.0')"
+
+    pip install /opt/anonymize_danish_text
+    pip install /opt/gpg_utils
+    pip install /opt/text_utils
 
 %environment
     export LANG=C.UTF-8 LC_ALL=C.UTF-8
+    export GPG_TTY=$(tty)
+    gpgconf --kill gpg-agent >/dev/null
+    gpg-connect-agent reloadagent /bye >/dev/null
+    gpg-connect-agent updatestartuptty /bye >/dev/null
     . /venv/bin/activate

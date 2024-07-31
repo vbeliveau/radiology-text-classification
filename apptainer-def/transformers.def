@@ -29,6 +29,7 @@ From: debian:bookworm-slim
     pip install \
         datasets==2.17.1 \
         optuna==3.5.0 \
+        peft==0.9.0 \
         scikit-learn==1.3.2 \
         torch==2.2.1 \
         tensorboard==2.15.1 \

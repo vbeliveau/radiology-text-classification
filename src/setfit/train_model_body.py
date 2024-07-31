@@ -19,7 +19,6 @@ from setfit import (
     TrainingArguments,
 )
 from utils import (
-    default_batch_size,
     load_data,
     root_dir
 )
@@ -35,18 +34,25 @@ if __name__ == "__main__":
     with open(args.config_json, "r") as f:
         configs = json.load(f)
     project_name = configs["project_name"]
-    body_learning_rate = configs["body_learning_rate"]
-    batch_size = configs.get("batch_size", default_batch_size)
+    model_id = configs.get("model_id")
+    model_str = configs.get("model_str", model_id.split("/")[-1])
+
+    best_configs_json = f"{root_dir}/models/setfit/{model_str}/{project_name}/model_body/optuna/best_params.json"
+    with open(best_configs_json, "r") as f:
+        best_configs = json.load(f)
+    body_learning_rate = best_configs["body_learning_rate"]
+    batch_size = best_configs["batch_size"]
     model_prefix = f"body-learning-rate-{body_learning_rate}_batch-size-{batch_size}"
     print(model_prefix)
 
     # Assign paths
     os.chdir(root_dir)
-    output_dir = f"{root_dir}/models/setfit/{project_name}/model_body"
+    output_dir = f"{root_dir}/models/setfit/{model_str}/{project_name}/model_body"
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     # Load data
-    data = load_data(project_name)
+    data_dir = configs.get("data_dir", "/nlp/data/preproc")
+    data = load_data(project_name, data_dir=data_dir)
     train_dataset = data["train_dataset"]
     val_dataset = data["val_dataset"]
 
@@ -63,7 +69,7 @@ if __name__ == "__main__":
         logging_steps=1,
         max_length=128,
         max_steps=total_train_examples//batch_size,
-        num_epochs=1,
+        # num_epochs=1,  # overridden by max_steps
         output_dir=f"{output_dir}/checkpoints",
         report_to=["tensorboard"],
         sampling_strategy="oversampling",
@@ -72,8 +78,7 @@ if __name__ == "__main__":
         use_amp=True,
     )
 
-    model = SetFitModel.from_pretrained(
-        "sentence-transformers/distiluse-base-multilingual-cased-v2")
+    model = SetFitModel.from_pretrained(model_id)
 
     # There is a bug when using containers. Somehow config gets added
     # as an attribute, but is dict instead of PretrainedConfig.

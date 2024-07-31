@@ -41,7 +41,7 @@ from utils import (
 
 def compute_metrics(labels, predictions):
     balanced_accuracy = balanced_accuracy_score(labels, predictions)
-    f1_score_macro =  f1_score(labels, predictions, average="macro")
+    f1_score_macro = f1_score(labels, predictions, average="macro")
     return {
         "balanced_accuracy": balanced_accuracy,
         "f1_score_macro": f1_score_macro,
@@ -50,7 +50,8 @@ def compute_metrics(labels, predictions):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(prog='Training of classifier head for transformer model.')
+    parser = argparse.ArgumentParser(
+        prog='Training of classifier head for transformer model.')
     parser.add_argument("-c", "--config_json", type=str, required=True)
     args = parser.parse_args()
 
@@ -93,10 +94,15 @@ if __name__ == "__main__":
         print(configs.get("base_model"))
         print(model_id)
         model = AutoModelForSequenceClassification.from_pretrained(
-            configs.get("base_model"), num_labels=n_classes)
+            configs.get("base_model"),
+            num_labels=n_classes
+        ).to("cuda" if torch.cuda.is_available() else "cpu")
         model = PeftModel.from_pretrained(model, model_id)
     else:
-        model = AutoModelForSequenceClassification.from_pretrained(model_id)
+        model = AutoModelForSequenceClassification.from_pretrained(
+            model_id,
+            num_labels=n_classes
+        ).to("cuda" if torch.cuda.is_available() else "cpu")
 
     # Compute predictions
     model.eval()

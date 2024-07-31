@@ -1,0 +1,10 @@
+{
+"batch_size": 8,
+"body_learning_rate_min": 1e-6,
+"body_learning_rate_max": 1e-4,
+"body_learning_rate_log": true,
+"data_dir": "/nlp/data/preproc-midl",
+"model_id": "/nlp/.cache/huggingface/hub/models--KennethEnevoldsen--dfm-sentence-encoder-large-exp2-no-lang-align/snapshots/ec8293d8f447023de99d1e7fb79aa918d6258dc7",
+"model_str": "dfm-sentence-encoder-large-exp2-no-lang-align",
+"project_name": "MTS"
+}

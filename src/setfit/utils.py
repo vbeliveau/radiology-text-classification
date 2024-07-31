@@ -36,8 +36,6 @@ if not Path(root_dir).is_dir():
     root_dir = "/proc_data1/bd5/nlp"
     print(f"Changed root_dir from /nlp to {root_dir}")
 
-default_batch_size = 128
-
 
 class OptunaSetFitModelBodyTrainer(Trainer):
 
@@ -285,10 +283,9 @@ class OptunaSetFitEndToEndModel(SetFitModel):
                     pass
 
 
-def load_data(project_name):
+def load_data(project_name, data_dir=f"{root_dir}/data/preproc"):
 
-    df = pd.read_csv(
-        f"{root_dir}/data/preproc/{project_name}.csv")
+    df = pd.read_csv(f"{data_dir}/{project_name}.csv")
     # Remove nans.. should not be happening at this stage
     df = df[[isinstance(text, str) for text in df["text"]]]
 

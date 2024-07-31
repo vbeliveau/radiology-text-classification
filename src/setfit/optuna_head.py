@@ -7,24 +7,23 @@ Created on Wed May 31 09:28:21 2023
 """
 
 import argparse
-import os
 import json
+import os
 import optuna
 
-# from datetime import datetime
 from optuna.storages import RetryFailedTrialCallback
 from optuna.study import MaxTrialsCallback
 from optuna.trial import TrialState
 from pathlib import Path
-from setfit import (
-    # sample_dataset,
-    SetFitModel,
-    TrainingArguments,
-)
+from setfit import TrainingArguments
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics import f1_score
 from utils import (
     load_data,
-    OptunaSetFitModelBodyTrainer,
-    root_dir
+    OptunaSetFitEndToEndModel,
+    OptunaSetFitEndToEndTrainer,
+    root_dir,
+    WeightedCELossSetFitHead,
 )
 
 
@@ -32,6 +31,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         prog='Optuna hyperparameters tuning for Setfit model body.')
+    # parser.add_argument("-c", "--config_json", type=str, required=True)
     parser.add_argument("-c", "--config_json", type=str, required=True)
     args = parser.parse_args()
 
@@ -46,14 +46,18 @@ if __name__ == "__main__":
     model_str = configs.get("model_str", model_id.split("/")[-1])
 
     os.chdir(root_dir)
-    output_dir = f"{root_dir}/models/setfit/{model_str}/{project_name}/model_body/optuna"
-    print(f"Output directory: {output_dir}")
+    output_dir = f"{root_dir}/models/setfit/{model_str}/{project_name}/head/optuna"
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     # Load data
     data_dir = configs.get("data_dir", "/nlp/data/preproc")
     data = load_data(project_name, data_dir=data_dir)
     train_dataset = data["train_dataset"]
     val_dataset = data["val_dataset"]
+    n_classes = data["n_classes"]
+    classes_weight = data["classes_weight"]
+
+    num_epochs = 50
 
     class MaximumNumberOfTrialsException(Exception):
         pass
@@ -70,78 +74,98 @@ if __name__ == "__main__":
             study.stop()
             raise MaximumNumberOfTrialsException
 
-        body_learning_rate_min = configs.get("body_learning_rate_min")
-        body_learning_rate_max = configs.get("body_learning_rate_max")
-        body_learning_rate_log = configs.get("body_learning_rate_log")
+        # Head learning rate
+        head_learning_rate_min = configs.get("head_learning_rate_min")
+        head_learning_rate_max = configs.get("head_learning_rate_max")
+        head_learning_rate_log = configs.get("head_learning_rate_log")
 
-        body_learning_rate = trial.suggest_float(
-            "body_learning_rate",
-            body_learning_rate_min,
-            body_learning_rate_max,
-            log=body_learning_rate_log)
-
-        batch_size_min = configs.get("batch_size_min", None)
-        batch_size_max = configs.get("batch_size_max", None)
-        if batch_size_min is not None and batch_size_max is not None:
-            batch_size = trial.suggest_int(
-                "batch_size",
-                batch_size_min,
-                batch_size_max)
+        if head_learning_rate_min is not None and head_learning_rate_max is not None:
+            head_learning_rate = trial.suggest_float(
+                "head_learning_rate",
+                head_learning_rate_min,
+                head_learning_rate_max,
+                log=head_learning_rate_log)
         else:
-            batch_size = configs.get("batch_size", 128)
+            head_learning_rate = 1e-6
 
-        model_prefix = f"trial-{trial.number}_body-learning-rate-{body_learning_rate:.2e}_batch-size-{batch_size}"
+        # Batch size
+        batch_size = configs.get("batch_size", 128)
+        if batch_size != 128:
+            batch_size_str = f"_batch-size-{batch_size}"
+        else:
+            batch_size_str = ""
+
+        # num_epochs
+        num_epochs = configs.get("num_epochs", 50)
+        print(num_epochs)
+        if isinstance(num_epochs, str):
+            n_epochs_list = [int(num_epoch)
+                             for num_epoch in num_epochs.split(",")]
+            num_epochs = trial.suggest_categorical("num_epochs", n_epochs_list)
+            num_epochs_str = f"_num-epochs-{num_epochs}"
+        else:
+            num_epochs_str = ""
+
+        model_prefix = f"trial-{trial.number}_head-learning-rate-{head_learning_rate:.2e}{batch_size_str}{num_epochs_str}"
         print(model_prefix)
-
-        total_train_examples = 25000
-        total_eval_steps = 10
 
         training_args = TrainingArguments(
             batch_size=batch_size,
-            body_learning_rate=body_learning_rate,
-            evaluation_strategy="steps",
-            eval_steps=total_train_examples/total_eval_steps//batch_size,
+            end_to_end=False,
+            head_learning_rate=head_learning_rate,
             logging_dir=f"{output_dir}/runs/{model_prefix}",
             logging_steps=1,
+            logging_strategy="steps",
             max_length=128,
-            max_steps=total_train_examples//batch_size,
-            # num_epochs=1,  # overridden by max_steps
+            num_epochs=num_epochs,
             report_to=["tensorboard"],
             sampling_strategy="oversampling",
             use_amp=True,
         )
 
-        # There is some strange behavior with model_init, so using this
-        # When using model_init, the model seems not to get properly reset
-        # before new training.
+        model_body = SentenceTransformer(model_id)
 
-        model = SetFitModel.from_pretrained(model_id)
+        model_head = WeightedCELossSetFitHead(
+            in_features=model_body.get_sentence_embedding_dimension(),
+            out_features=n_classes,
+            weight=classes_weight,
+        )
 
-        # There is a bug when using containers. Somehow config gets added
-        # as an attribute, but is dict instead of PretrainedConfig.
-        # Trainer tries to use the to_json_string() mehtod on dict, which
-        # throws and error.
-        if hasattr(model, "config"):
-            delattr(model, "config")
+        model_body.to(model_head.device)
 
-        trainer = OptunaSetFitModelBodyTrainer(
+        model = OptunaSetFitEndToEndModel(model_body, model_head)
+
+        # Assign metric
+        metric_type = configs.get("metric", "f1_macro")
+        print(f"metric_type: {metric_type}")
+        # metric = None
+        if metric_type == "f1_macro":
+            def metric(x, y): return f1_score(x, y, average="macro")
+        try:
+            metric
+        except:
+            raise ValueError(
+                "No valid metric specified in configuration file.")
+
+        trainer = OptunaSetFitEndToEndTrainer(
             args=training_args,
-            metric="accuracy",
+            metric=metric,
+            eval_dataset=val_dataset,
+            # model_init=model_init,
             model=model,
             trial=trial,
         )
 
-        trainer.train_embeddings(
+        trainer.train_classifier(
             x_train=train_dataset["text"],
             y_train=train_dataset["label"],
-            x_eval=val_dataset["text"],
-            y_eval=val_dataset["label"],
         )
 
-        # The "best_metric" might peak but not be very stable will
-        # therefore to not generalize very well. Instead we return the final
+        # The "best_metric" might peak high but not be very stable and will
+        # therefore not generalize very well. Instead we return the final
         # evaluation of the converged model.
-        return trainer.eval_loss
+        # return model.best_metric
+        return trainer.evaluate()["metric"]
 
     # Setup storage
     Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -158,14 +182,14 @@ if __name__ == "__main__":
 
     # Create study
     study = optuna.create_study(
-        direction="minimize",
+        direction="maximize",
         load_if_exists=True,
         storage=storage,
         study_name=project_name,
     )
 
     # Optimize
-    n_trials = configs.get("n_trials", 100)
+    n_trials = 100
     study.optimize(
         objective,
         n_trials=n_trials,
@@ -176,6 +200,8 @@ if __name__ == "__main__":
 
     best_params = study.best_params
     best_params["project_name"] = project_name
+    if "num_epochs" not in list(best_params.keys()):
+        best_params["num_epochs"] = num_epochs
     if "batch_size" not in list(best_params.keys()):
         best_params["batch_size"] = configs.get("batch_size", 128)
 

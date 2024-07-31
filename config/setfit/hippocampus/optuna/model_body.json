@@ -1,7 +1,0 @@
-{
-"body_learning_rate_min": 1e-7,
-"body_learning_rate_max": 1e-6,
-"body_learning_rate_log": true,
-"n_trials": 100,
-"project_name": "hippocampus"
-}

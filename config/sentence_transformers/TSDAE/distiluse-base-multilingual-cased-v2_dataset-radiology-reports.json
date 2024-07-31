@@ -1,0 +1,12 @@
+{
+"checkpoint_save_steps": 10000,
+"datasets": "radiology_reports",
+"learning_rate": 1e-6,
+"model_id": "sentence-transformers/distiluse-base-multilingual-cased-v2",
+"n_evaluations": 25,
+"output_dir": "models/sentence_transformers/distiluse-base-multilingual-cased-v2-TSDAE_dataset-radiology-reports_test4",
+"use_amp": true,
+"test_size": 0.05,
+"test_batch_size": 12,
+"train_batch_size": 12,
+}

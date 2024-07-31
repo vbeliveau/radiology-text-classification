@@ -1,0 +1,9 @@
+{
+"batch_size": 12,
+"checkpoint_save_steps": 1000,
+"model_id": "xlm-roberta-base",
+"datasets": "radiology_reports",
+"evaluation_steps": 1000,
+"output_dir": "models/sentence_transformers_SimCSE/xlm-roberta-base_dataset-radiology-reports",
+"warmup_steps": 1000
+}

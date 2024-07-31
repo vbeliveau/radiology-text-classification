@@ -40,21 +40,21 @@ if __name__ == "__main__":
     model_id = configs.get("model_id")
     model_str = configs.get("model_str", model_id.split("/")[-1])
 
-    best_configs_json = f"{root_dir}/models/setfit/{model_str}/{project_name}/end_to_end/optuna/best_params.json"
+    best_configs_json = f"{root_dir}/models/setfit/{model_str}/{project_name}/head/optuna/best_params.json"
     with open(best_configs_json, "r") as f:
         best_configs = json.load(f)
 
-    print(configs)
+    print(f"Configs: {configs}")
+    print(f"Best configs: {best_configs}")
+
     batch_size = best_configs.get("batch_size", 128)
-    body_learning_rate = best_configs["body_learning_rate"]
     head_learning_rate = best_configs["head_learning_rate"]
-    l2_weight = best_configs["l2_weight"]
-    num_epochs = best_configs["num_epochs"]
+    num_epochs = best_configs.get("num_epochs", 50)
     project_name = best_configs["project_name"]
 
     # Assign paths
     os.chdir(root_dir)
-    output_dir = f"{root_dir}/models/setfit/{model_str}/{project_name}/end_to_end"
+    output_dir = f"{root_dir}/models/setfit/{model_str}/{project_name}/head"
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     # Load data
@@ -67,12 +67,10 @@ if __name__ == "__main__":
 
     args = TrainingArguments(
         batch_size=batch_size,
-        body_learning_rate=body_learning_rate,
         end_to_end=True,
         eval_steps=1,
         evaluation_strategy="epoch",
         head_learning_rate=head_learning_rate,
-        l2_weight=l2_weight,
         logging_dir=f"{output_dir}/runs",
         logging_steps=1,
         logging_strategy="steps",
@@ -87,8 +85,7 @@ if __name__ == "__main__":
         use_amp=True,
     )
 
-    model_body = SentenceTransformer(
-        f"{root_dir}/models/setfit/{model_str}/{project_name}/model_body/best_model")
+    model_body = SentenceTransformer(model_id)
 
     model_head = WeightedCELossSetFitHead(
         in_features=model_body.get_sentence_embedding_dimension(),

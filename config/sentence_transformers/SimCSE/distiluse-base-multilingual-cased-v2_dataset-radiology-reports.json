@@ -1,0 +1,5 @@
+{
+"model_id": "sentence-transformers/distiluse-base-multilingual-cased-v2",
+"datasets": "radiology_reports",
+"output_dir": "models/sentence_transformers_SimCSE/distiluse-base-multilingual-cased-v2"
+}

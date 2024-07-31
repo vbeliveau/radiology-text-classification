@@ -25,7 +25,7 @@ def main():
     with open(args.config_json, "r") as f:
         configs = json.load(f)
 
-    model_id = configs["base_model"]
+    model_id = configs["model_name"]
     load_tokenizer(model_id)
     AutoModelForMaskedLM.from_pretrained(model_id)
 

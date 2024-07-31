@@ -9,15 +9,13 @@ Created on Wed Dec 13 11:30:35 2023
 
 import argparse
 import json
+import numpy as np
 import os
-import datasets
-import transformers
 
 from datasets import load_dataset
 from pathlib import Path
+from peft import get_peft_model, LoraConfig, TaskType
 from transformers import (
-    AutoConfig,
-    AutoTokenizer,
     AutoModelForMaskedLM,
     DataCollatorForWholeWordMask,
     HfArgumentParser,
@@ -33,10 +31,11 @@ from utils import (
 
 def main():
 
-    parser = argparse.ArgumentParser(prog="Pre-Training of Transformers using Huggingface")
+    parser = argparse.ArgumentParser(
+        prog="Pre-Training of Transformers using Huggingface")
     parser.add_argument('-c', '--config_json', type=str, default=None,
-            help="Configuration JSON file specifying options for fine-tuning."
-        )
+                        help="Configuration JSON file specifying options for fine-tuning."
+                        )
     args = parser.parse_args()
     with open(args.config_json, "r") as f:
         configs = json.load(f)
@@ -44,19 +43,29 @@ def main():
     datasets = configs["datasets"].split(",")
     model_id = configs["model_name"]
     training_parser = HfArgumentParser(TrainingArguments)
-    training_args, = training_parser.parse_json_file(json_file=configs["training_configs"])
+    training_args, = training_parser.parse_json_file(
+        json_file=configs["training_configs"])
 
     print(f"Model: {model_id}")
     print(f"Datasets: {datasets}")
 
     set_logging()
 
-    # Define paths
-    root_dir = "/nlp"
-    preproc_dir = f"{root_dir}/preproc"
-
     tokenizer = load_tokenizer(model_id)
     model = AutoModelForMaskedLM.from_pretrained(model_id)
+
+    if configs.get("peft", False):
+        print("Running using PEFT")
+        peft_config = LoraConfig(
+            task_type=TaskType.SEQ_CLS,
+            r=configs.get("peft_r", 2),
+            lora_alpha=configs.get("peft_lora_alpha", 16),
+            lora_dropout=configs.get("peft_lora_dropout", 0.1),
+            bias=configs.get("peft_bias", "none"),
+        )
+        model = get_peft_model(model, peft_config)
+        model.print_trainable_parameters()
+
     data_collator = DataCollatorForWholeWordMask(
         tokenizer=tokenizer,
         mlm_probability=0.15,
@@ -66,16 +75,18 @@ def main():
 
     print("Loading data")
 
-    data_files =[]
+    data_files = []
 
     if "clinical_notes" in datasets:
-        data_files += [f"/nlp/data/anonymized_clinical_notes_part{part}.csv" for part in [1, 2, 3]]
+        data_files += [
+            f"/nlp/data/anonymized_clinical_notes_part{part}.csv" for part in [1, 2, 3]]
 
     # if "eeg_reports" in datasets:
     #     data_files.append("/nlp/data/anonymized_radiology_texts.json")
 
     if "radiology_reports" in datasets:
-        data_files += [f"/nlp/data/anonymized_radiology_reports_part{part}.csv" for part in [1, 2, 3]]
+        data_files += [
+            f"/nlp/data/anonymized_radiology_reports_part{part}.csv" for part in [1, 2, 3]]
 
     if len(data_files) == 0:
         raise RuntimeError("No valid dataset specified.")
@@ -101,6 +112,8 @@ def main():
     # Fix for the following issue: https://github.com/huggingface/transformers/issues/27925
     class CustomTrainer(Trainer):
 
+        # https://github.com/huggingface/transformers/blob/9acce7de1cb8229304a467938ebb47727d60cdb2/src/transformers/trainer.py#L2495
+
         def _save_checkpoint(self, model, trial, metrics=None):
             # In all cases, including ddp/dp/deepspeed, self.model is always a reference to the model we
             # want to save except FullyShardedDDP.
@@ -115,13 +128,15 @@ def main():
             run_dir = self._get_output_dir(trial=trial)
             output_dir = os.path.join(run_dir, checkpoint_folder)
             if os.path.exists(output_dir) and len(os.listdir(output_dir)) > 0:
-                logger.warning(
+                # logger.warning(
+                print(
                     f"Checkpoint destination directory {output_dir} already exists and is non-empty."
                     "Saving will proceed but saved results may be invalid."
                 )
                 staging_output_dir = output_dir
             else:
-                staging_output_dir = os.path.join(run_dir, f"tmp-{checkpoint_folder}")
+                staging_output_dir = os.path.join(
+                    run_dir, f"tmp-{checkpoint_folder}")
             self.save_model(staging_output_dir, _internal_call=True)
 
             if not self.args.save_only_model:
@@ -148,7 +163,8 @@ def main():
 
             # Save the Trainer state
             if self.args.should_save:
-                self.state.save_to_json(os.path.join(staging_output_dir, TRAINER_STATE_NAME))
+                self.state.save_to_json(os.path.join(
+                    staging_output_dir, TRAINER_STATE_NAME))
 
             if self.args.push_to_hub:
                 self._push_from_checkpoint(staging_output_dir)
@@ -172,13 +188,12 @@ def main():
             if self.args.should_save:
                 self._rotate_checkpoints(use_mtime=True, output_dir=run_dir)
 
-
     trainer = CustomTrainer(
         args=training_args,
         eval_dataset=tokenized_ds["test"],
         data_collator=data_collator,
-        model=model,        
-        train_dataset=tokenized_ds["train"],       
+        model=model,
+        train_dataset=tokenized_ds["train"],
     )
 
     # Resume if any checkpoint exists, otherwise start training

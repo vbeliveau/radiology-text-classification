@@ -1,0 +1,6 @@
+{
+"model_name": "xlm-roberta-base",
+"datasets": "radiology_reports",
+"peft": true,
+"training_configs": "config/transformers_finetuning/xlm-roberta-base-peft_dataset-radiology-reports_training-parameters.json"
+}

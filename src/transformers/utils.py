@@ -14,12 +14,10 @@ import transformers
 from datasets import Dataset
 from sklearn.metrics import f1_score, balanced_accuracy_score
 from torch import Tensor
-from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
 from transformers import (
     AutoTokenizer,
     Trainer,
 )
-from typing import Dict, List, Optional, Tuple, Union
 
 
 root_dir = '/nlp'
@@ -29,17 +27,18 @@ def compute_metrics(eval_pred):
     logits, labels = eval_pred
     predictions = np.argmax(logits, axis=-1)
     balanced_accuracy = balanced_accuracy_score(labels, predictions)
-    f1_score_macro =  f1_score(labels, predictions, average="macro")
+    f1_score_macro = f1_score(labels, predictions, average="macro")
     return {
         "balanced_accuracy": balanced_accuracy,
         "f1_score_macro": f1_score_macro,
     }
 
 
-def load_data(project_name: str):
+def load_data(project_name: str, data_dir=None):
 
-    df = pd.read_csv(
-        f"{root_dir}/data/preproc/{project_name}.csv")
+    if data_dir is None:
+        data_dir = f"{root_dir}/data/preproc-midl"
+    df = pd.read_csv(f"{data_dir}/{project_name}.csv")
     # Remove nans.. should not be happening at this stage
     df = df[[isinstance(text, str) for text in df["text"]]]
 
@@ -48,12 +47,13 @@ def load_data(project_name: str):
     categories_summary = "Categories: "
 
     n_factors = []
-    for n_factor, factor in enumerate(factors[1]):
+    category_names = factors[1]
+    for n_factor, factor in enumerate(category_names):
         n_factors += [sum([factor_ == n_factor for factor_ in factors[0]])]
         categories_summary += f" {factor} (n={n_factors[-1]})"
     print(categories_summary)
     df['label'] = factors[0]
-    n_classes = len(factors[1])
+    n_classes = len(category_names)
 
     def get_min_labels(labels):
         n_labels = [
@@ -83,6 +83,7 @@ def load_data(project_name: str):
     classes_weight = Tensor([1/count for count in classes_count])
 
     return {
+        "category_names": category_names,
         "classes_count": classes_count,
         "classes_weight": classes_weight,
         "eval_dataset": eval_dataset,
@@ -145,6 +146,72 @@ def load_and_preproc_data(project_name: str, tokenizer):
     return data
 
 
+def add_data_prompt(data):
+
+    task_description = f"Classify the medical text describing focal cortical dysplasia (i.e., FCD) as either {', '.join(data['category_names'][:-1])} or {data['category_names'][-1]}"
+    task = get_detailed_instruct(task_description)
+    print(task)
+
+    for dataset_name in ["train_dataset", "eval_dataset", "eval_dataset"]:
+        data[dataset_name] = Dataset.from_dict({
+            "text": [task + s for s in data[dataset_name]["text"]],
+            "label": data[dataset_name]["label"]
+        })
+
+    return data
+
+
+def load_and_preproc_data_prompt(project_name: str, tokenizer):
+
+    data = load_data(project_name)
+    train_dataset = data["train_dataset"]
+    val_dataset = data["val_dataset"]
+    eval_dataset = data["eval_dataset"]
+
+    data = add_data_prompt(data)
+
+    # Override preprocessing function
+
+    def _preprocess_function(samples):
+        return preprocess_function(samples, tokenizer)
+
+    train_tokenized_ds = train_dataset.map(
+        _preprocess_function,
+        batched=True,
+        num_proc=4,
+        remove_columns=remove_columns(train_dataset),
+    )
+
+    val_tokenized_ds = val_dataset.map(
+        _preprocess_function,
+        batched=True,
+        num_proc=4,
+        remove_columns=remove_columns(val_dataset)
+    )
+
+    eval_tokenized_ds = eval_dataset.map(
+        _preprocess_function,
+        batched=True,
+        num_proc=4,
+        remove_columns=remove_columns(eval_dataset),
+    )
+
+    data.update({
+        "eval_tokenized_ds": eval_tokenized_ds,
+        "train_tokenized_ds": train_tokenized_ds,
+        "val_tokenized_ds": val_tokenized_ds
+    })
+
+    return data
+
+
+def get_detailed_instruct(task_description: str) -> str:
+    if not task_description:
+        return ''
+
+    return 'Instruct: {}\nQuery: '.format(task_description)
+
+
 def set_logging():
     transformers.utils.logging.enable_progress_bar()
     transformers.utils.logging.set_verbosity_info()
@@ -152,18 +219,26 @@ def set_logging():
     logger.info("INFO")
 
 
-def load_tokenizer(model_id):
-    tokenizer = AutoTokenizer.from_pretrained(
-        model_id,
-        padding="max_length",
-        add_prefix_space=True
-    )
+def load_tokenizer(model_id, device_map=None):
+    if device_map:
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_id,
+            padding="max_length",
+            add_prefix_space=True,
+            device_map=device_map,
+        )
+    else:
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_id,
+            padding="max_length",
+            add_prefix_space=True,
+        )
     tokenizer.pad_token = tokenizer.eos_token
     return tokenizer
 
 
 class WeightedCELossTrainer(Trainer):
-    
+
     classes_weight = None
 
     def compute_loss(self, model, inputs, return_outputs=False):
@@ -174,6 +249,8 @@ class WeightedCELossTrainer(Trainer):
         # Compute custom loss
         # loss_fct = torch.nn.CrossEntropyLoss(weight=torch.tensor(self.classes_weight, device=model.device, dtype=logits.dtype))
         # print(f"classes_weight: {self.classes_weight}")
-        loss_fct = torch.nn.CrossEntropyLoss(weight=self.classes_weight.clone().detach().to(model.device))
-        loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels.view(-1))
+        loss_fct = torch.nn.CrossEntropyLoss(
+            weight=self.classes_weight.clone().detach().to(model.device))
+        loss = loss_fct(
+            logits.view(-1, self.model.config.num_labels), labels.view(-1))
         return (loss, outputs) if return_outputs else loss

@@ -1,0 +1,10 @@
+{
+"head_learning_rate_min": 1e-4,
+"head_learning_rate_max": 1e-1,
+"head_learning_rate_log": true,
+"l2_weight_min": 1e-4,
+"l2_weight_max": 1e-3,
+"l2_weight_log": true,
+"project_name": "FCD",
+"model_id": "intfloat/e5-mistral-7b-instruct"
+}

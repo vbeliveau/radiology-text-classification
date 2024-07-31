@@ -26,7 +26,7 @@ from utils import (
 # project_name = "MTS"
 
 
-def evaluate_end_to_end(
+def evaluate_model(
         model_dir,
         project_name,
         data_dir=None,
@@ -72,9 +72,9 @@ def evaluate_end_to_end(
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-config_json", "--config_json",
-                        type=str, required=True)
-    parser.add_argument("-tsne", "--tsne", action="store_true")
+    parser.add_argument("--config_json", type=str, required=True)
+    parser.add_argument("--eval_type", type=str, required=True)
+    parser.add_argument("--tsne", action="store_true")
     args = parser.parse_args()
 
     # Load configs and assign parameters
@@ -84,11 +84,14 @@ if __name__ == "__main__":
     project_name = configs["project_name"]
     model_id = configs.get("model_id")
     model_str = configs.get("model_str", model_id.split("/")[-1])
-    model_dir = f"{root_dir}/models/setfit/{model_str}/{project_name}/end_to_end/best_model"
+    if args.eval_type == "end-to-end":
+        model_dir = f"{root_dir}/models/setfit/{model_str}/{project_name}/end_to_end/best_model"
+    elif args.eval_type == "head":
+        model_dir = f"{root_dir}/models/setfit/{model_str}/{project_name}/head/best_model"
     data_dir = configs.get("data_dir", "/nlp/data/preproc")
 
     # project_name = configs["project_name"]
-    evaluate_end_to_end(
+    evaluate_model(
         model_dir,
         project_name,
         data_dir=data_dir,

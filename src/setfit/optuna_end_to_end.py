@@ -9,22 +9,16 @@ Created on Wed May 31 09:28:21 2023
 import argparse
 import json
 import os
-import numpy as np
 import optuna
-import torch
 
 from optuna.storages import RetryFailedTrialCallback
 from optuna.study import MaxTrialsCallback
-from optuna.trial import Trial, TrialState
+from optuna.trial import TrialState
 from pathlib import Path
 from setfit import TrainingArguments
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics import f1_score
-from torch import nn
-from tqdm.auto import tqdm, trange
-from typing import Optional, List, Union
 from utils import (
-    default_batch_size,
     load_data,
     OptunaSetFitEndToEndModel,
     OptunaSetFitEndToEndTrainer,
@@ -48,13 +42,16 @@ if __name__ == "__main__":
     project_name = configs.get("project_name", None)
     if project_name is None:
         raise ValueError("project_name is not defined in config file.")
+    model_id = configs.get("model_id")
+    model_str = configs.get("model_str", model_id.split("/")[-1])
 
     os.chdir(root_dir)
-    output_dir = f"{root_dir}/models/setfit/{project_name}/end_to_end/optuna"
+    output_dir = f"{root_dir}/models/setfit/{model_str}/{project_name}/end_to_end/optuna"
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     # Load data
-    data = load_data(project_name)
+    data_dir = configs.get("data_dir", "/nlp/data/preproc")
+    data = load_data(project_name, data_dir=data_dir)
     train_dataset = data["train_dataset"]
     val_dataset = data["val_dataset"]
     n_classes = data["n_classes"]
@@ -118,9 +115,9 @@ if __name__ == "__main__":
         else:
             l2_weight = 1e-6
 
-        batch_size = configs.get("batch_size", default_batch_size)
-        if batch_size != default_batch_size:
-            batch_size_str = "_batch-size-{batch_size}"
+        batch_size = configs.get("batch_size", 128)
+        if batch_size != 128:
+            batch_size_str = f"_batch-size-{batch_size}"
         else:
             batch_size_str = ""
 
@@ -144,7 +141,7 @@ if __name__ == "__main__":
         )
 
         model_body = SentenceTransformer(
-            f"{root_dir}/models/setfit/{project_name}/model_body/best_model")
+            f"{root_dir}/models/setfit/{model_str}/{project_name}/model_body/best_model")
 
         model_head = WeightedCELossSetFitHead(
             in_features=model_body.get_sentence_embedding_dimension(),
@@ -223,7 +220,7 @@ if __name__ == "__main__":
     best_params["project_name"] = project_name
     best_params["num_epochs"] = num_epochs
     if "batch_size" not in list(best_params.keys()):
-        best_params["batch_size"] = default_batch_size
+        best_params["batch_size"] = configs.get("batch_size", 128)
 
     # Print out best parameters
     print(best_params)
