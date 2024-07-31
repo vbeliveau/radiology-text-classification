@@ -13,27 +13,12 @@ from tqdm import tqdm
 from transformers import T5ForConditionalGeneration, T5Tokenizer
 
 
-# class DebugArgs():
-
-#     def __init__(self):
-#         self.data_dir = "/proc_data1/bd5/nlp/data/preproc-midl"
-#         self.project = "FCD"
-
-
-# args = DebugArgs()
-
-
-# %%
-
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--in_csv", type=str, required=True)
     parser.add_argument("--out_csv", type=str, required=True)
     args = parser.parse_args()
-
-# %%
 
     # Read data
     df = pd.read_csv(args.in_csv)

@@ -156,7 +156,6 @@ if __name__ == "__main__":
         # Assign metric
         metric_type = configs.get("metric", "f1_macro")
         print(f"metric_type: {metric_type}")
-        # metric = None
         if metric_type == "f1_macro":
             def metric(x, y): return f1_score(x, y, average="macro")
         try:
@@ -169,7 +168,6 @@ if __name__ == "__main__":
             args=training_args,
             metric=metric,
             eval_dataset=val_dataset,
-            # model_init=model_init,
             model=model,
             trial=trial,
         )

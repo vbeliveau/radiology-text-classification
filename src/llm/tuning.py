@@ -19,23 +19,6 @@ from utils import (
 )
 
 
-class DebugArgs():
-    def __init__(self):
-        self.data_dir = "/proc_data1/bd5/nlp/data/preproc-melba-translated"
-        # self.model = "biomistral"
-        self.model = "llama3-70B"
-        self.n_samples = "15"
-        self.out_dir = "/proc_data1/bd5/nlp/models/llm"
-        self.project = "FCD"
-        self.root_dir = "/proc_data1/bd5/nlp"
-        self.verbose = True
-
-
-args = DebugArgs()
-
-# %%
-
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -52,8 +35,6 @@ if __name__ == "__main__":
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
-# %%
-
     model_id, model_str = get_model_info(args.model, args.root_dir)
     out_dir = f"{args.out_dir}/{model_str}/{args.project}"
     Path(out_dir).mkdir(parents=True, exist_ok=True)
@@ -64,23 +45,6 @@ if __name__ == "__main__":
     df_train = data["train_dataset"].to_pandas()
     df_val = data["val_dataset"].to_pandas()
     unique_labels = df_train["label_text"].unique()
-
-    # %% Test prediction
-
-    # df_ = df_val.iloc[120]
-    # pred, status = few_shots_predict(
-    #     pipe,
-    #     df_["text"],
-    #     df_train,
-    #     n_samples=5,
-    #     valid_labels=unique_labels,
-    #     verbose=True
-    # )
-
-    # print(
-    #     f"True category: {df_['label_text']}, Predicted category: {pred}")
-
-    # %%
 
     metrics_csv = f"{out_dir}/val_metrics.csv"
 

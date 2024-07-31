@@ -1,4 +1,5 @@
 #!/bin/bash
+
 apptainer run \
 	--net --network none \
 	--nv \

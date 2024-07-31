@@ -20,23 +20,6 @@ from utils import (
 )
 
 
-class DebugArgs():
-    def __init__(self):
-        self.data_dir = "/proc_data1/bd5/nlp/data/preproc-melba-translated"
-        # self.model = "biomistral"
-        self.model = "biomistral"
-        self.n_samples = 2
-        self.out_dir = "/proc_data1/bd5/nlp/models/llm"
-        self.project = "FCD"
-        self.root_dir = "/proc_data1/bd5/nlp"
-        self.verbose = True
-
-
-args = DebugArgs()
-
-# %%
-
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -60,9 +43,6 @@ if __name__ == "__main__":
     if not Path(metrics_csv).exists():
 
         pipe = load_pipeline(model_id)
-
-        # data = load_data(
-        #     args.project, data_dir="/proc_data1/bd5/nlp/data/preproc-midl", val=True)
         data = load_data(args.project, data_dir=args.data_dir, val=True)
         df_train = data["train_dataset"].to_pandas()
         df_eval = data["eval_dataset"].to_pandas()
@@ -76,25 +56,6 @@ if __name__ == "__main__":
         else:
             n_samples = args.n_samples
 
-        # %%
-
-        # query_text = df_train.iloc[0]["text"]
-
-        # from utils import few_shots_predict_biomistral
-
-        # few_shots_predict_biomistral(
-        #     pipe,
-        #     query_text,
-        #     df_train,
-        #     unique_labels,
-        #     max_retry=1,
-        #     n_samples=2,
-        #     seed=42,
-        #     valid_labels=None,
-        #     verbose=False,
-        # )
-
-        # %%
         pred, status = predict_samples(
             pipe,
             df_train,
@@ -106,8 +67,6 @@ if __name__ == "__main__":
             valid_labels=unique_labels,
             verbose=args.verbose,
         )
-
-    # %%
 
         y_pred = pred
         y_true = list(df_eval["label_text"])

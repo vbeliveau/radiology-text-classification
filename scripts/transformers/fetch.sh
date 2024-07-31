@@ -1,4 +1,5 @@
 #!/bin/bash
+
 apptainer run \
 	--nv \
 	-H ${NLP_ROOT}:/nlp \

@@ -23,9 +23,6 @@ from utils import (
 )
 
 
-# project_name = "MTS"
-
-
 def evaluate_model(
         model_dir,
         project_name,
@@ -62,12 +59,6 @@ def evaluate_model(
     cm = confusion_matrix(y_true, y_pred)
     print(cm)
 
-    # disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-    # disp.plot()
-
-    # plt.savefig(
-    #     f"{root_dir}/models/setfit/{project_name}/end_to_end/confusion_matrix.png", dpi=600)
-
 
 if __name__ == "__main__":
 
@@ -90,7 +81,6 @@ if __name__ == "__main__":
         model_dir = f"{root_dir}/models/setfit/{model_str}/{project_name}/head/best_model"
     data_dir = configs.get("data_dir", "/nlp/data/preproc")
 
-    # project_name = configs["project_name"]
     evaluate_model(
         model_dir,
         project_name,

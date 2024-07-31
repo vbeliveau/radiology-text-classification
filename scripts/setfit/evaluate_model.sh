@@ -1,5 +1,5 @@
 #!/bin/bash
-ROOT_DIR="/proc_data1/bd5/nlp"
+
 apptainer run \
 	--net --network none \
 	--nv \

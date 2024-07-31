@@ -21,7 +21,6 @@ from tqdm import tqdm
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
-    # BitsAndBytesConfig,
     pipeline,
 )
 
@@ -36,17 +35,9 @@ def get_model_info(model, root_dir):
         model_id = f"{root_dir}/.cache/huggingface/hub/models--BioMistral--BioMistral-7B/snapshots/9a11e1ffa817c211cbb52ee1fb312dc6b61b40a5"
         model_str = "BioMistral-7B"
 
-    if model == "llama3-8B":
-        model_id = f"{root_dir}/.cache/huggingface/hub/models--meta-llama--Meta-Llama-3-70B-Instruct/snapshots/7129260dd854a80eb10ace5f61c20324b472b31c"
-        model_str = "Meta-Llama-3-70B-Instruct"
-
     if model == "llama3-70B":
         model_id = f"{root_dir}/.cache/huggingface/hub/models--meta-llama--Meta-Llama-3-70B-Instruct/snapshots/7129260dd854a80eb10ace5f61c20324b472b31c"
         model_str = "Meta-Llama-3-70B-Instruct"
-
-    if model == "meditron":
-        model_id = "epfl-llm/meditron-70b"
-        model_str = "meditron-70b"
 
     if model == "munin":
         model_id = "RJuro/munin-neuralbeagle-7b"
@@ -58,7 +49,8 @@ def get_model_info(model, root_dir):
 def load_data(project_name, data_dir=f"{root_dir}/data/preproc", val=False):
 
     df = pd.read_csv(f"{data_dir}/{project_name}.csv")
-    # Remove nans.. should not be happening at this stage
+
+    # Remove nans.
     df = df[[isinstance(text, str) for text in df["text"]]]
 
     # Convert labels to numerical categories
@@ -183,31 +175,7 @@ def meditron_prompt(query_text, labels, samples):
             prompt += f"\n<|im_start|> question\nCategorize the text: {text}\n<|im_end|>\n<|im_start|> answer\n{category}<|im_end|>"
     prompt += f"\n<|im_start|> question\nCategorize the text: {text}\n<|im_end|>\n<|im_start|> answer\n"
     return prompt
-
-    # if args.shots > 0:
-    #     prompt = prompt[:-1]
-    # if "orca" in args.checkpoint_name:
-    #     system_msg = "You are an AI assistant who helps people find information."
-    #     return f"<|im_start|> system\n{system_msg}<|im_end|>\n<|im_start|> question\n{prompt}<|im_end|>\n<|im_start|> answer\n"
-    # elif "medical" in args.checkpoint_name:
-    #     system_msg = "You are a helpful, respectful and honest assistant." + \
-    #         "Always answer as helpfully as possible, while being safe." + \
-    #         "Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content." + \
-    #         "Please ensure that your responses are socially unbiased and positive in nature.\n\n" + \
-    #         "If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct." + \
-    #         "If you don't know the answer to a question, please don't share false information."""
-    #     return f"<|im_start|> system\n{system_msg}<|im_end|>\n <|im_start|> user\n{prompt}<|im_end|>\n <|im_start|> assistant\n"
-    # elif np.any([x in args.checkpoint_name for x in ["medmcqa", "medqa", "pubmedqa"]]):
-    #     return f"<|im_start|>question\n{prompt}<|im_end|>\n<|im_start|>answer\n"
-    # elif "med42" in args.checkpoint_name:
-    #     if "Question:" in prompt:
-    #         question = prompt.split("Question:")[1].strip()
-    #     else:
-    #         question = prompt
-    #     return f'''\n<|system|>: You are a helpful medical assistant created by M42 Health in the UAE.\n<|prompter|>:{question}\n<|assistant|>:'''
-    # else:
-    #     return prompt
-
+    
 
 def munin_prompt(query_text, labels, samples):
     prompt = "You are an experienced radiologist that help users extract infromation from radiology reports. Categorize the text in <<<>>> into one of the following predefined categories:\n\n"
