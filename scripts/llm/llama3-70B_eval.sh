@@ -8,6 +8,6 @@ bash ${NLP_ROOT}/scripts/llm/eval.sh llama3-70B MTS \
     --data_dir /nlp/data/preproc-melba-translated \
     --n_samples 10
 
-bash ${NLP_ROOT}/scripts/llm/eval.sh llama3-70B hippocampus \
+bash ${NLP_ROOT}/scripts/llm/eval.sh llama3-70B HA \
     --data_dir /nlp/data/preproc-melba-translated \
     --n_samples 10

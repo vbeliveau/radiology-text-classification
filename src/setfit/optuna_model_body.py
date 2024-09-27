@@ -88,7 +88,7 @@ if __name__ == "__main__":
                 batch_size_min,
                 batch_size_max)
         else:
-            batch_size = configs.get("batch_size", 128)
+            batch_size = configs.get("batch_size", 8)
 
         model_prefix = f"trial-{trial.number}_body-learning-rate-{body_learning_rate:.2e}_batch-size-{batch_size}"
         print(model_prefix)

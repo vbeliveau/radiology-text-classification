@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Example usage:
+# bash translate.sh /nlp/data/preproc-melba/hippocampus.csv /nlp/data/preproc-melba-translated/hippocampus.csv
+
 apptainer run \
 	--net --network none \
 	-H ${NLP_ROOT}:/nlp \

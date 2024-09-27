@@ -8,6 +8,6 @@ bash ${NLP_ROOT}/scripts/llm/eval.sh biomistral MTS \
     --data_dir /nlp/data/preproc-melba-translated \
     --n_samples 10
 
-bash ${NLP_ROOT}/scripts/llm/eval.sh biomistral hippocampus \
+bash ${NLP_ROOT}/scripts/llm/eval.sh biomistral HA \
     --data_dir /nlp/data/preproc-melba-translated \
     --n_samples 10

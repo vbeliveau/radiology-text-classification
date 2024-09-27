@@ -165,7 +165,7 @@ def biomistral_prompt(query_text, labels, samples):
 
 def meditron_prompt(query_text, labels, samples):
 
-    prompt = "<|im_start|> system\nYou are an experienced radiologist that help users extract infromation from radiology reports. Your task is to categorize texts in the following categories:\n\n"
+    prompt = "<|im_start|> system\nYou are an experienced radiologist that help users extract information from radiology reports. Your task is to categorize texts in the following categories:\n\n"
     prompt += "\n".join(labels)
     prompt += '\n\nYou will only respond with the category. Do not include the word "Category". Do not provide explanations or notes.<|im_end|>'
     if samples is not None:
@@ -178,7 +178,7 @@ def meditron_prompt(query_text, labels, samples):
     
 
 def munin_prompt(query_text, labels, samples):
-    prompt = "You are an experienced radiologist that help users extract infromation from radiology reports. Categorize the text in <<<>>> into one of the following predefined categories:\n\n"
+    prompt = "You are an experienced radiologist that help users extract information from radiology reports. Categorize the text in <<<>>> into one of the following predefined categories:\n\n"
     prompt += "\n".join(labels)
     prompt += '\n\nYou will only respond with the category. Do not include the word "Category". Do not provide explanations or notes.'
     if samples is not None:
@@ -209,7 +209,7 @@ def munin_danish_prompt(query_text, labels, samples):
 
 def llama_instruct_prompt(query_text, labels, samples):
 
-    query = "You are an experienced radiologist that help users extract infromation from radiology reports. Your task is to categorize texts in the following categories:\n\n"
+    query = "You are an experienced radiologist that help users extract information from radiology reports. Your task is to categorize texts in the following categories:\n\n"
     query += "\n".join(labels)
     query += '\n\nYou will only respond with the category. Do not include the word "Category". Do not provide explanations or notes.'
 

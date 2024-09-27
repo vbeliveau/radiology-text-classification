@@ -109,6 +109,11 @@ if __name__ == "__main__":
             weight_decay_max,
             log=weight_decay_log)
 
+
+        # Assign parameters
+        training_args_dict["learning_rate"] = learning_rate
+        training_args_dict["weight_decay"] = weight_decay
+
         training_args_dict["logging_dir"] = f"{output_dir}/runs/trial-{trial.number}_learning-rate-{learning_rate:.2e}_weight-decay-{weight_decay:.2e}"
         training_parser = HfArgumentParser(TrainingArguments)
         training_args, = training_parser.parse_dict(training_args_dict)

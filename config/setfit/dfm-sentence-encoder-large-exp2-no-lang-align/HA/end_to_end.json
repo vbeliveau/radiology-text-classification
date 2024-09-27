@@ -1,0 +1,16 @@
+{
+"batch_size": 8,
+"body_learning_rate_min": 5e-7,
+"body_learning_rate_max": 5e-6,
+"body_learning_rate_log": true,
+"data_dir": "/nlp/data/preproc-melba",
+"head_learning_rate_min": 1e-4,
+"head_learning_rate_max": 1e-1,
+"head_learning_rate_log": true,
+"l2_weight_min": 1e-4,
+"l2_weight_max": 1e-3,
+"l2_weight_log": true,
+"project_name": "HA",
+"model_id": "/nlp/.cache/huggingface/hub/models--KennethEnevoldsen--dfm-sentence-encoder-large-exp2-no-lang-align/snapshots/ec8293d8f447023de99d1e7fb79aa918d6258dc7",
+"model_str": "dfm-sentence-encoder-large-exp2-no-lang-align"
+}
