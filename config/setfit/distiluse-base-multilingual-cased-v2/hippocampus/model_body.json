@@ -1,9 +1,0 @@
-{
-"body_learning_rate_min": 1e-7,
-"body_learning_rate_max": 1e-6,
-"body_learning_rate_log": true,
-"data_dir": "/nlp/data/preproc-midl",
-"model_id": "sentence-transformers/distiluse-base-multilingual-cased-v2",
-"model_str": "distiluse-base-multilingual-cased-v2",
-"project_name": "hippocampus"
-}
