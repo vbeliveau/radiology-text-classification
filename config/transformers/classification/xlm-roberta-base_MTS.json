@@ -1,7 +1,7 @@
 {
 "project_name": "MTS",
 "base_model": "xlm-roberta-base",
-"training_configs": "config/transformers/classification/xlm-roberta-base_MTS_training-parameters.json",
+"training_configs": "config/transformers_head/xlm-roberta-base_MTS_training-parameters.json",
 "learning_rate_min": 1e-6,
 "learning_rate_max": 1e-4,
 "learning_rate_log": true,

@@ -4,7 +4,7 @@
 "logging_steps": 10,
 "logging_strategy": "steps",
 "num_train_epochs": 50,
-"output_dir": "/nlp/models/transformers/classification/DanskBERT-pretrained_MTS",
+"output_dir": "/nlp/models/transformers_head/DanskBERT-pretrained_MTS",
 "per_device_train_batch_size": 16,
 "per_device_eval_batch_size": 16,
 "push_to_hub": false,
